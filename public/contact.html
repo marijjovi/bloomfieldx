@@ -33,11 +33,33 @@
 </nav>
 <div class="contact-page">
     <div class="form-container">
-        <h1> Service Area</h1>
-        <img
-        src="https://maps.googleapis.com/maps/api/staticmap?center=Greater+Los+Angeles,CA&zoom=8&size=600x400&key=AIzaSyC1UGToRYKHnXwosGd0fgJS5hDDYo_ud2c&signature=Glx0BZgU4TtFq-sC6HAHmPg-M9E=" 
-        >
+        <h1> Service Area</h1>  
+        <div id="map-container"></div>
     </div>
+    <script>
+        const params = new URLSearchParams({ 
+            lat: 34.0522,   // Los Angeles Latitude (get the exact one you need)
+            lng: -118.2437,
+            zoom: 8,
+            size: '600x400' });
+        const ProxyUrl = `/api/static-map?${params}`;
+
+        const mapContainer = document.getElementById('map-container');
+
+        fetch(ProxyUrl)
+            .then(response => response.blob()) 
+            .then(imageBlob => {
+               
+                const imageObjectUrl = URL.createObjectURL(imageBlob);
+                
+                const imgElement = document.createElement('img');
+                imgElement.src = imageObjectUrl;
+                imgElement.alt = 'La Map';
+                
+               
+                mapContainer.appendChild(imgElement);})
+
+    </script>
     <div class = "form-container">
         <h2>Have a question? </h2>
         <div class = form-group>
