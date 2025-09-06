@@ -4,4 +4,4 @@ const app = require('../../server.js'); // main Express app
 
 
 
-module.exports.handler = handler;
+module.exports.handler = serverless(app);
