@@ -2,10 +2,11 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-require('dotenv').config(); // Loads variables from .env
+
 const http = require('http');
 const https = require('https');
 
+require('dotenv').config(); // Loads variables from .env
 // 2. CREATE EXPRESS APP
 const app = express();
 const PORT = process.env.PORT || 3000; // Use environment port or 3000
@@ -19,31 +20,19 @@ app.use(express.static('public'));
 
 
 app.get('/api/static-map', async (req, res) => {
-  console.log('🟢 Request received at /api/static-map');
-  
-  const { lat, lng, zoom = 10, size = '600x400' } = req.query;
-  const googleUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${process.env.GOOGLE_STATIC_MAPS_KEY}`;
-  
-  console.log('🔗 Calling Google URL');
-  
-  // Use the native https module to stream the response
-  https.get(googleUrl, (googleResponse) => {
-    // Check if Google returned an error
-    if (googleResponse.statusCode !== 200) {
-      console.error('❌ Google API error:', googleResponse.statusCode);
-      return res.status(googleResponse.statusCode).send('Google API error');
-    }
-    
-    // Set the same content-type that Google returns
-    res.setHeader('Content-Type', googleResponse.headers['content-type']);
-    
-    // Pipe the image data directly from Google to the client
-    googleResponse.pipe(res);
-    
-  }).on('error', (err) => {
-    console.error('❌ HTTPS request error:', err.message);
-    res.status(500).send('Error fetching map');
-  });
+  try {
+      const { lat, lng, zoom = 10, size = '600x400' } = req.query;
+      
+      const url = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${process.env.GOOGLE_STATIC_MAPS_KEY}`;
+
+      const response = await axios.get(url, { responseType: 'arraybuffer' });
+     
+      res.set('Content-Type', 'image/png');
+      res.send(response.data);
+  } catch (error) {
+      console.error('Error fetching static map:', error);
+      res.status(500).json({ error: 'Failed to fetch map' });
+  }
 });
 
 // 5. START THE SERVER
