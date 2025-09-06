@@ -41,3 +41,5 @@ app.get('/api/static-map', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running! Open http://localhost:${PORT} to view your site.`);
 });
+
+module.exports = app;
