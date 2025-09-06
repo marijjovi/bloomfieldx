@@ -3,7 +3,7 @@ const serverless = require('serverless-http');
 const app = require('../../server.js');
 
 // Create the middleware for explicit path rewriting
-const proxyPath = '/.netlify/functions/api';
+const proxyPath = '/.netlify/functions';
 
 const handler = serverless(app, {
   request: (request, event, context) => {
