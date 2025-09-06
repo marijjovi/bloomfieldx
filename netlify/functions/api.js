@@ -1,12 +1,22 @@
-exports.handler = async (event, context) => {
-    console.log('🔶 Function called! Path:', event.path);
+// netlify/functions/api.js
+const serverless = require('serverless-http');
+const app = require('../../server.js'); // main Express app
+
+// Create the handler with explicit path rewriting
+const handler = serverless(app, {
+  request: function(request, event, context) {
+    // Log the incoming path for debugging
+    console.log('Incoming path:', event.path);
     
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ 
-        message: 'Hello from Netlify Function!',
-        receivedPath: event.path,
-        receivedQuery: event.queryStringParameters
-      }, null, 2)
-    };
-  };
+    
+    // Remove the Netlify function prefix
+    if (event.path.startsWith('/.netlify/functions/api')) {
+      request.url = event.path.replace('/.netlify/functions/api', '');
+    }
+    
+    console.log('Rewritten path for Express:', request.url);
+    return request;
+  }
+});
+
+module.exports.handler = handler;
