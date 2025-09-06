@@ -45,7 +45,7 @@
        // Fetch the JSON data from your API
         //fetch(`/api/static-map?${params}`)
         //    .then(response => response.blob())
-        fetch(`/.netlify/functions/static-map?${params}`)
+        fetch(`/.netlify/functions/api?${params}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
