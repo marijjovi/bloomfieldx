@@ -1,27 +1,64 @@
-// netlify/functions/api.js
-const serverless = require('serverless-http');
-const app = require('../../server.js');
+const axios = require('axios');
 
-// Create the middleware for explicit path rewriting
-const proxyPath = '/.netlify/functions';
-
-const handler = serverless(app, {
-  request: (request, event, context) => {
-    // Log the original path for debugging
-    console.log('📩 Original path received:', event.path);
-    
-    // Check if the request is for this function
-    if (event.path.startsWith(proxyPath)) {
-      // Rewrite the path by removing the proxy prefix
-      request.url = event.path.replace(proxyPath, '');
-      console.log('🔄 Rewritten path for Express:', request.url);
-    } else {
-      // For any other path, use it as-is (shouldn't happen)
-      request.url = event.path;
-    }
-    
-    return request;
+exports.handler = async (event, context) => {
+  // Only allow GET requests
+  if (event.httpMethod !== 'GET') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
   }
-});
 
-module.exports.handler = handler;
+  try {
+    // Get query parameters
+    const { lat, lng, zoom = 10, size = '600x400' } = event.queryStringParameters;
+    
+    // Validate required parameters
+    if (!lat || !lng) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Missing required parameters: lat and lng' })
+      };
+    }
+
+    // Get API key from environment variable
+    const apiKey = process.env.GOOGLE_STATIC_MAPS_KEY;
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'API key not configured' })
+      };
+    }
+
+    // Build the Google Maps URL
+    const url = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${apiKey}`;
+
+    // Fetch the image from Google
+    const response = await axios.get(url, { 
+      responseType: 'arraybuffer',
+      timeout: 10000
+    });
+
+    // Return the image with proper headers
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+      },
+      body: response.data.toString('base64'),
+      isBase64Encoded: true
+    };
+  } catch (error) {
+    console.error('Error fetching static map:', error.message);
+    
+    // Return error response
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ 
+        error: 'Failed to fetch map',
+        message: error.message 
+      })
+    };
+  }
+};
