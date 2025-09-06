@@ -12,28 +12,29 @@ const PORT = process.env.PORT || 3000; // Use environment port or 3000
 app.use(express.static('public'));
 
 // 4. DEFINE THE SECURE PROXY API ENDPOINT
+// In your root server.js file - REPLACE the /api/static-map route with this:
 app.get('/api/static-map', async (req, res) => {
-  console.log('Received request for map:', req.query); // Helpful for debugging
-
+  console.log('Request received at /api/static-map');
   try {
-    // Get parameters from the frontend request
-    const { lat, lng, zoom = 8, size = '600x400' } = req.query;
-
-    // Construct the REAL Google URL using the secret key from .env
+    const { lat, lng, zoom = 10, size = '600x400' } = req.query;
     const googleUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${process.env.GOOGLE_STATIC_MAPS_KEY}`;
-
-    // Fetch the image from Google
-    const response = await axios.get(googleUrl, { responseType: 'stream' });
-
-    // Forward headers (like content-type) from Google to the client
-    res.set(response.headers);
     
-    // Pipe the image data directly from Google to the client
-    response.data.pipe(res);
+    // Use axios to get the image as an ArrayBuffer (binary data)
+    const response = await axios.get(googleUrl, { 
+      responseType: 'arraybuffer' // This is key for binary data
+    });
+
+    // Get the image data and content type from Google's response
+    const imageBuffer = Buffer.from(response.data);
+    const contentType = response.headers['content-type'];
+
+    // Set the correct headers and send the image buffer
+    res.set('Content-Type', contentType);
+    res.send(imageBuffer);
 
   } catch (error) {
-    console.error('Error proxying map:', error.message);
-    res.status(500).send('Could not generate map image.');
+    console.error('Error:', error.message);
+    res.status(500).send('Server Error: ' + error.message);
   }
 });
 
