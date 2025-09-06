@@ -11,7 +11,7 @@ const handler = serverless(app, {
     
     // Remove the Netlify function prefix
     if (event.path.startsWith('/.netlify/functions/api')) {
-      request.url = event.path.replace('/.netlify/functions/api', '');
+      request.url = event.path.replace('/.netlify/functions', '');
     }
     
     console.log('Rewritten path for Express:', request.url);
