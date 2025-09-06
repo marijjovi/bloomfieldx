@@ -42,22 +42,21 @@
             lng: -118.2437,
             zoom: 8,
             size: '600x400' });
-        const ProxyUrl = `/api/static-map?${params}`;
-
-        const mapContainer = document.getElementById('map-container');
-
-        fetch(ProxyUrl)
-            .then(response => response.blob()) 
-            .then(imageBlob => {
-               
-                const imageObjectUrl = URL.createObjectURL(imageBlob);
-                
+       // Fetch the JSON data from your API
+        fetch(`/api/static-map?${params}`)
+            .then(response => response.json())
+            .then(data => {
+            // Create img element and set src to the data URL
                 const imgElement = document.createElement('img');
-                imgElement.src = imageObjectUrl;
-                imgElement.alt = 'La Map';
-                
-               
-                mapContainer.appendChild(imgElement);})
+                imgElement.src = data.imageUrl; // Use the data URL from JSON
+                imgElement.alt = 'Map of Los Angeles';
+                imgElement.id = 'map-img';
+                document.getElementById('map-container').appendChild(imgElement);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('map-container').innerHTML = '<p style="color: red;">Failed to load map.</p>';
+            });
 
     </script>
     <div class = "form-container">
